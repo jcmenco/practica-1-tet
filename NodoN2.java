@@ -36,7 +36,7 @@ public class NodoN2 {
             System.out.println("Waiting ...");
             previousNode = SocketNodo1.accept();
             
-            hilo = new Thread(new SecondaryNodes.handlerNode(previousNode));
+            hilo = new Thread(new NodoN2.handlerNode(previousNode));
             hilo.start();
         }
     }
@@ -59,7 +59,7 @@ public class NodoN2 {
                 entrada = new DataInputStream(socket.getInputStream());
                 salida = new DataOutputStream(socket.getOutputStream());
             } catch (IOException ex) {
-                Logger.getLogger(SecondaryNodes.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(NodoN2.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 
@@ -143,7 +143,7 @@ public class NodoN2 {
                     
                 }
             } catch (IOException ex) {
-                Logger.getLogger(CentralNode.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(NodoN2.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
