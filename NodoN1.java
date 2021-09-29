@@ -81,14 +81,14 @@ public class NodoN1 {
                 SocketNodoCentral = new Socket(nodos[4], puerto);
                 salidaNodoCentral = new DataOutputStream(SocketNodoCentral.getOutputStream());                
                 
-                SocketNodo2 = new Socket(nodos[1], puerto);
-                salidaNodo2 = new DataOutputStream(SocketNodo2.getOutputStream());
-
-                SocketNodo3 = new Socket(nodos[2], puerto);
-                salidaNodo3 = new DataOutputStream(SocketNodo3.getOutputStream());
-
-                SocketNodo4 = new Socket(nodos[3], puerto);
-                salidaNodo4 = new DataOutputStream(SocketNodo4.getOutputStream());
+//                SocketNodo2 = new Socket(nodos[1], puerto);
+//                salidaNodo2 = new DataOutputStream(SocketNodo2.getOutputStream());
+//
+//                SocketNodo3 = new Socket(nodos[2], puerto);
+//                salidaNodo3 = new DataOutputStream(SocketNodo3.getOutputStream());
+//
+//                SocketNodo4 = new Socket(nodos[3], puerto);
+//                salidaNodo4 = new DataOutputStream(SocketNodo4.getOutputStream());
 
                 while (true) {
 
@@ -102,7 +102,7 @@ public class NodoN1 {
                     archivo.setFileName("./clientesDB.txt");
 
                     // Array de sockets para calcular el siguiente nodo
-                    Socket[] socketNodos = {SocketNodo2, SocketNodo3, SocketNodo4};
+                    //Socket[] socketNodos = {SocketNodo2, SocketNodo3, SocketNodo4};
                     DataOutputStream[] salidaNodos = {salidaNodo2, salidaNodo3, salidaNodo4};
 
                     int index;
@@ -123,7 +123,7 @@ public class NodoN1 {
 
                             // Se calcula el siguiente nodo para revisar
                             index = rd.nextInt(2) + 1;
-                            nextNode = socketNodos[index];
+                            //nextNode = socketNodos[index];
                             outNextNode = salidaNodos[index];
 
                             // Envía el ID al siguiente nodo

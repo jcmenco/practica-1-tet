@@ -84,14 +84,14 @@ public class CentralNode {
                 SocketNodo1 = new Socket(nodos[0], puerto);
                 salidaNodo1 = new DataOutputStream(SocketNodo1.getOutputStream());
 
-                SocketNodo2 = new Socket(nodos[1], puerto);
-                salidaNodo2 = new DataOutputStream(SocketNodo2.getOutputStream());
-
-                SocketNodo3 = new Socket(nodos[2], puerto);
-                salidaNodo3 = new DataOutputStream(SocketNodo3.getOutputStream());
-
-                SocketNodo4 = new Socket(nodos[3], puerto);
-                salidaNodo4 = new DataOutputStream(SocketNodo4.getOutputStream());
+//                SocketNodo2 = new Socket(nodos[1], puerto);
+//                salidaNodo2 = new DataOutputStream(SocketNodo2.getOutputStream());
+//
+//                SocketNodo3 = new Socket(nodos[2], puerto);
+//                salidaNodo3 = new DataOutputStream(SocketNodo3.getOutputStream());
+//
+//                SocketNodo4 = new Socket(nodos[3], puerto);
+//                salidaNodo4 = new DataOutputStream(SocketNodo4.getOutputStream());
 
                 while (true) {
 
@@ -105,14 +105,14 @@ public class CentralNode {
                     archivo.setFileName("./clientesDB.txt");
 
                     // Array de sockets para calcular el siguiente nodo
-                    Socket[] socketNodos = {SocketNodo1, SocketNodo2, SocketNodo3, SocketNodo4};
+                    //Socket[] socketNodos = {SocketNodo1, SocketNodo2, SocketNodo3, SocketNodo4};
                     DataOutputStream[] salidaNodos = {salidaNodo1, salidaNodo2, salidaNodo3, salidaNodo4};
 
                     // Calcula el siguente nodo para enviarle las partes del mensaje
                     int index = rd.nextInt(3) + 1;
-                    Socket nextNode = socketNodos[index];
+                    //Socket nextNode = socketNodos[index];
                     DataOutputStream outNextNode = salidaNodos[0];
-                    System.out.println("Siguiente nodo " + nextNode.getInetAddress());
+                    //System.out.println("Siguiente nodo " + nextNode.getInetAddress());
 
                     switch (cl) {
                         // Save request desde el cliente
@@ -150,8 +150,8 @@ public class CentralNode {
                                 outNextNode.writeUTF(tramas[i]);
                                 // Calcula el siguente nodo
                                 index = rd.nextInt(3) + 1;
-                                nextNode = socketNodos[index];
-                                outNextNode = salidaNodos[index];
+                                //nextNode = socketNodos[index];
+                                outNextNode = salidaNodos[0];
                             }
 
                             // Responde al cliente
@@ -178,7 +178,7 @@ public class CentralNode {
 
                             // Calcula el siguente nodo
                             index = rd.nextInt(3) + 1;
-                            nextNode = socketNodos[index];
+                            //nextNode = socketNodos[index];
                             outNextNode = salidaNodos[index];
 
                             // Envía el ID al siguiente nodo
