@@ -25,56 +25,44 @@ public class SecondaryNodes {
     public static void main(String[] args) throws IOException {
 
         // Puerto del nodo
-        ServerSocket servidor;
+        ServerSocket SocketNodo1;
         int puerto = 5000;
-        servidor = new ServerSocket(puerto);
+        SocketNodo1 = new ServerSocket(puerto);
 
         Thread hilo;
 
-        // Socket del nodo central
-        Socket central;
-
-        InputStreamReader isr = new InputStreamReader(System.in);
-        BufferedReader br = new BufferedReader(isr);
+        // Socket para conexiones al nodo
+        Socket previousNode;
 
         while (true) {
             System.out.println("Waiting ...");
-            central = servidor.accept();
-
-            // Para manejar posibles múltiples conexiones al nodo
-            hilo = new Thread(new CentralNode.handlerClient(central));
+            previousNode = SocketNodo1.accept();
+            
+            hilo = new Thread(new SecondaryNodes.handlerNode(previousNode));
             hilo.start();
         }
     }
 
-    public static class handlerClient implements Runnable {
+    public static class handlerNode implements Runnable {
 
-        DataInputStream entrada; // Lo que viene desde el nodo central
-        DataOutputStream salida; // Lo que se manda al nodo central
+        DataInputStream entrada; // Todo lo que entra al nodo se maneja con esta variable     
+        DataOutputStream salida; // Lo que sale del nodo (no necesariamente hacia el central)
 
-        DataInputStream entradaNodo1;
-        DataOutputStream salidaNodo1;
-
-        DataInputStream entradaNodo2;
-        DataOutputStream salidaNodo2;
-
-        DataInputStream entradaNodo3;
-        DataOutputStream salidaNodo3;
-
-        DataInputStream entradaNodo4;
-        DataOutputStream salidaNodo4;
-
-        // Socket del cliente
+        DataOutputStream salidaNodoCentral; // Lo que se manda al nodo central
+        DataOutputStream salidaNodo1; // Lo que se manda al nodo N1
+        DataOutputStream salidaNodo2; // Lo que se manda al nodo N2
+        DataOutputStream salidaNodo3; // Lo que se manda al nodo N3
+        DataOutputStream salidaNodo4; // Lo que se manda al nodo N4
+       
         Socket socket = null;
 
-        public handlerClient(Socket s) {
+        public handlerNode(Socket s) {
             socket = s;
-
             try {
                 entrada = new DataInputStream(socket.getInputStream());
                 salida = new DataOutputStream(socket.getOutputStream());
             } catch (IOException ex) {
-                Logger.getLogger(CentralNode.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(SecondaryNodes.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 
@@ -85,29 +73,29 @@ public class SecondaryNodes {
                 String cliente;
                 Random rd = new Random();
 
-                Socket clienteNodo1;
-                Socket clienteNodo2;
-                Socket clienteNodo3;
-                Socket clienteNodo4;
-                String[] nodos = {"5001", "5002", "5003", "5004"};
+                Socket SocketNodoCentral;
+                Socket SocketNodo1;
+                Socket SocketNodo2;
+                Socket SocketNodo3;
+                Socket SocketNodo4;
+                String[] nodos = {"3.238.217.180", "3.92.8.167", "34.231.229.33", "44.193.39.105","3.232.96.218"};                
                 int puerto = 5000;
 
-                // Socket de los demás nodos
-                clienteNodo1 = new Socket(nodos[0], puerto);
-                entradaNodo1 = new DataInputStream(clienteNodo1.getInputStream());
-                salidaNodo1 = new DataOutputStream(clienteNodo1.getOutputStream());
+                // Socket de los nodos
+                SocketNodoCentral = new Socket(nodos[4], puerto);
+                salidaNodoCentral = new DataOutputStream(SocketNodoCentral.getOutputStream());                
+                
+                SocketNodo1 = new Socket(nodos[0], puerto);
+                salidaNodo1 = new DataOutputStream(SocketNodo1.getOutputStream());
 
-                clienteNodo2 = new Socket(nodos[1], puerto);
-                entradaNodo2 = new DataInputStream(clienteNodo2.getInputStream());
-                salidaNodo2 = new DataOutputStream(clienteNodo2.getOutputStream());
+                SocketNodo2 = new Socket(nodos[1], puerto);
+                salidaNodo2 = new DataOutputStream(SocketNodo2.getOutputStream());
 
-                clienteNodo3 = new Socket(nodos[2], puerto);
-                entradaNodo3 = new DataInputStream(clienteNodo3.getInputStream());
-                salidaNodo3 = new DataOutputStream(clienteNodo3.getOutputStream());
+                SocketNodo3 = new Socket(nodos[2], puerto);
+                salidaNodo3 = new DataOutputStream(SocketNodo3.getOutputStream());
 
-                clienteNodo4 = new Socket(nodos[3], puerto);
-                entradaNodo4 = new DataInputStream(clienteNodo4.getInputStream());
-                salidaNodo4 = new DataOutputStream(clienteNodo4.getOutputStream());
+                SocketNodo4 = new Socket(nodos[3], puerto);
+                salidaNodo4 = new DataOutputStream(SocketNodo4.getOutputStream());
 
                 while (true) {
 
@@ -121,7 +109,7 @@ public class SecondaryNodes {
                     archivo.setFileName("./clientesDB.txt");
 
                     // Array de sockets para calcular el siguiente nodo
-                    Socket[] socketNodos = {clienteNodo1, clienteNodo2, clienteNodo3, clienteNodo4};
+                    Socket[] socketNodos = {SocketNodo1, SocketNodo2, SocketNodo3, SocketNodo4};
                     DataOutputStream[] salidaNodos = {salidaNodo1, salidaNodo2, salidaNodo3, salidaNodo4};
 
                     int index;
@@ -137,7 +125,7 @@ public class SecondaryNodes {
 
                             if (!dataNodo.equals("Not found")) {
                                 // Sí hay coincidencia con el ID de referencia
-                                salida.writeUTF(dataNodo);
+                                salidaNodoCentral.writeUTF(dataNodo);
                             }
 
                             // Se calcula el siguiente nodo para revisar

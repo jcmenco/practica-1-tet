@@ -5,11 +5,9 @@
  */
 package practicafinal1;
 
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Random;
@@ -25,21 +23,18 @@ public class CentralNode {
     public static void main(String[] args) throws IOException {
 
         // Puerto del nodo
-        ServerSocket servidor;
+        ServerSocket SocketNodoCentral;
         int puerto = 5000;
-        servidor = new ServerSocket(puerto);
+        SocketNodoCentral = new ServerSocket(puerto);
 
         Thread hilo;
 
-        // Socket del cliente
-        Socket cliente;
-
-        InputStreamReader isr = new InputStreamReader(System.in);
-        BufferedReader br = new BufferedReader(isr);
+        // Socket para conexiones al cliente o a otros nodos
+        Socket cliente; 
 
         while (true) {
             System.out.println("Waiting ...");
-            cliente = servidor.accept();
+            cliente = SocketNodoCentral.accept();
 
             // Para manejar posibles múltiples conexiones al nodo
             hilo = new Thread(new handlerClient(cliente));
@@ -49,19 +44,12 @@ public class CentralNode {
 
     public static class handlerClient implements Runnable {
 
-        DataInputStream entrada; // Lo que viene desde el cliente
+        DataInputStream entrada; // Todo lo que entra al nodo se maneja con esta variable
         DataOutputStream salida; // Lo que se manda al cliente
 
-        DataInputStream entradaNodo1; // Lo que viene desde el nodo N1
         DataOutputStream salidaNodo1; // Lo que se manda al nodo N1
-
-        DataInputStream entradaNodo2; // Lo que viene desde el nodo N2
         DataOutputStream salidaNodo2; // Lo que se manda al nodo N2
-
-        DataInputStream entradaNodo3; // Lo que viene desde el nodo N3
         DataOutputStream salidaNodo3; // Lo que se manda al nodo N3
-
-        DataInputStream entradaNodo4; // Lo que viene desde el nodo N4
         DataOutputStream salidaNodo4; // Lo que se manda al nodo N4
 
         // Socket del cliente
@@ -85,29 +73,25 @@ public class CentralNode {
                 String cliente;
                 Random rd = new Random();
 
-                Socket clienteNodo1;
-                Socket clienteNodo2;
-                Socket clienteNodo3;
-                Socket clienteNodo4;
-                String[] nodos = {"5001", "5002", "5003", "5004"};
+                Socket SocketNodo1;
+                Socket SocketNodo2;
+                Socket SocketNodo3;
+                Socket SocketNodo4;
+                String[] nodos = {"3.238.217.180", "3.92.8.167", "34.231.229.33", "44.193.39.105"};
                 int puerto = 5000;
 
                 // Socket de los demás nodos
-                clienteNodo1 = new Socket(nodos[0], puerto);
-                entradaNodo1 = new DataInputStream(clienteNodo1.getInputStream());
-                salidaNodo1 = new DataOutputStream(clienteNodo1.getOutputStream());
+                SocketNodo1 = new Socket(nodos[0], puerto);
+                salidaNodo1 = new DataOutputStream(SocketNodo1.getOutputStream());
 
-                clienteNodo2 = new Socket(nodos[1], puerto);
-                entradaNodo2 = new DataInputStream(clienteNodo2.getInputStream());
-                salidaNodo2 = new DataOutputStream(clienteNodo2.getOutputStream());
+                SocketNodo2 = new Socket(nodos[1], puerto);
+                salidaNodo2 = new DataOutputStream(SocketNodo2.getOutputStream());
 
-                clienteNodo3 = new Socket(nodos[2], puerto);
-                entradaNodo3 = new DataInputStream(clienteNodo3.getInputStream());
-                salidaNodo3 = new DataOutputStream(clienteNodo3.getOutputStream());
+                SocketNodo3 = new Socket(nodos[2], puerto);
+                salidaNodo3 = new DataOutputStream(SocketNodo3.getOutputStream());
 
-                clienteNodo4 = new Socket(nodos[3], puerto);
-                entradaNodo4 = new DataInputStream(clienteNodo4.getInputStream());
-                salidaNodo4 = new DataOutputStream(clienteNodo4.getOutputStream());
+                SocketNodo4 = new Socket(nodos[3], puerto);
+                salidaNodo4 = new DataOutputStream(SocketNodo4.getOutputStream());
 
                 while (true) {
 
@@ -121,13 +105,13 @@ public class CentralNode {
                     archivo.setFileName("./clientesDB.txt");
 
                     // Array de sockets para calcular el siguiente nodo
-                    Socket[] socketNodos = {clienteNodo1, clienteNodo2, clienteNodo3, clienteNodo4};
+                    Socket[] socketNodos = {SocketNodo1, SocketNodo2, SocketNodo3, SocketNodo4};
                     DataOutputStream[] salidaNodos = {salidaNodo1, salidaNodo2, salidaNodo3, salidaNodo4};
 
                     // Calcula el siguente nodo para enviarle las partes del mensaje
                     int index = rd.nextInt(3) + 1;
                     Socket nextNode = socketNodos[index];
-                    DataOutputStream outNextNode = salidaNodos[index];
+                    DataOutputStream outNextNode = salidaNodos[0];
                     System.out.println("Siguiente nodo " + nextNode.getInetAddress());
 
                     switch (cl) {
@@ -206,18 +190,12 @@ public class CentralNode {
                         case 15:
                             System.out.println("case 15");
 
-                            // Revisa todos los sockets para obtener el mensaje
-                            String[] dataNodos = {entradaNodo1.readUTF(),
-                                entradaNodo2.readUTF(),
-                                entradaNodo3.readUTF(),
-                                entradaNodo4.readUTF()};
-
                             /////////// Terminar
                             break;
                     }
 
                     // Termina la conexión con el cliente
-                    socket.close();
+                    //socket.close();
 
                 }
             } catch (IOException ex) {
