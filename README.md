@@ -8,7 +8,7 @@ La idea de este sistema es que un cliente pueda almacenar la información de sus
 Se diseñó la red de tal forma que haya comunicación entre todos los nodos (esto incrementa la tolerancia a fallos o a pérdida de información), pero solo exista un punto de acceso con el cliente. Esto puede parecer contradictorio, porque que solo exista un punto de comunicación con el cliente representa un riesgo, ya que si se cae ese punto se pierde la comunicación. La razón para hacerlo de esta forma es porque es más simple de implementar, y se quería diseñar un sistema minimalista (algo simple).
 
 ### Topología de la red
-Esta es una red """"" que tiene 4 nodos "secundarios" y un nodo central. 
+Esta es una red P2P centralizada que tiene 4 nodos "secundarios" y un nodo central. 
 
 Las interacción con el cliente se hace a través del nodo central, además, este nodo se encarga de la identificación de cada cliente y el particionamiento de la data. Los demás nodos se encargan únicamente de guardar y buscar información en sus archivos y enviarla al nodo central.
 
