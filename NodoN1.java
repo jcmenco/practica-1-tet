@@ -72,6 +72,7 @@ public class NodoN1 {
                     // Save request desde el nodo central
                     case 15:
                         System.out.println("case 15");
+                        System.out.println(entradaNodoN1.readUTF()+" esto es lo que llega");
                         archivo.setFileName("./tramasDB.txt");
                         archivo.setMensaje(entradaNodoN1.readUTF());
                         archivo.writeFile();

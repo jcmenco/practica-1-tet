@@ -89,6 +89,8 @@ public class CentralNode {
                             // Agrega el nuevo cliente
                             archivo.setMensaje(id + ";" + cuenta);
                             archivo.writeFile();
+                        } else {
+                            id = cuentaCliente.substring(0,2);
                         }
 
                         // Divide el mensaje y añade el identificador de 
@@ -100,6 +102,7 @@ public class CentralNode {
 
                         // Envía cada parte del mensaje al siguiente nodo
                         for (int i = 0; i < 3; i++) {
+                            System.out.println(tramas[i]+" esto es lo que se supone que manda cada vez");
                             outNextNode.writeUTF(tramas[i]);
                         }
 
