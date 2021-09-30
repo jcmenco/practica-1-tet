@@ -22,12 +22,13 @@ public class NodoN1 {
 
     public static void main(String[] args) throws IOException {
 
+        DataInputStream entradaNodoN1; // Lo que entra al nodo N1
+        DataOutputStream salidaNodoN1; // Lo que sale del nodo N1
+
         // Puerto del nodo
         ServerSocket SocketNodo1;
         int puerto = 5000;
         SocketNodo1 = new ServerSocket(puerto);
-
-        Thread hilo;
 
         // Socket para conexiones al nodo
         Socket previousNode;
@@ -35,9 +36,58 @@ public class NodoN1 {
         while (true) {
             System.out.println("Waiting ...");
             previousNode = SocketNodo1.accept();
-            
-            hilo = new Thread(new NodoN1.handlerNode(previousNode));
-            hilo.start();
+
+            try {
+                entradaNodoN1 = new DataInputStream(previousNode.getInputStream());
+                salidaNodoN1 = new DataOutputStream(previousNode.getOutputStream());
+
+                String cadena;
+
+                cadena = entradaNodoN1.readUTF();
+                System.out.println("Mensaje recibido: " + cadena);
+                int cl = cadena.length();
+
+                // Objeto de la clase FileMethods
+                FileMethods archivo = new FileMethods();
+                
+                DataOutputStream outNextNode;
+
+                switch (cl) {
+                    // Search request desde el nodo central
+                    case 2:
+                        System.out.println("case 2");
+                        archivo.setFileName("./tramasDB.txt");
+                        String dataNodo = archivo.readFile(entradaNodoN1.readUTF(), false);
+
+                        if (!dataNodo.equals("Not found")) {
+                            // Sí hay coincidencia con el ID de referencia
+                            // Envía la data al nodo anterior
+                            salidaNodoN1.writeUTF(dataNodo);
+                        }
+
+                        //////////// TERMINAR
+
+                        break;
+
+                    // Save request desde el nodo central
+                    case 15:
+                        System.out.println("case 15");
+                        archivo.setFileName("./tramasDB.txt");
+                        archivo.setMensaje(entradaNodoN1.readUTF());
+                        archivo.writeFile();
+                        
+                        // Envía ACK al nodo central
+                        salidaNodoN1.writeUTF("OK");
+                        
+                        // Cierra conexión con el nodo central
+                        previousNode.close();
+
+                        break;
+                }
+
+            } catch (IOException ex) {
+                Logger.getLogger(NodoN1.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -50,7 +100,7 @@ public class NodoN1 {
         DataOutputStream salidaNodo2; // Lo que se manda al nodo N2
         DataOutputStream salidaNodo3; // Lo que se manda al nodo N3
         DataOutputStream salidaNodo4; // Lo que se manda al nodo N4
-       
+
         Socket socket = null;
 
         public handlerNode(Socket s) {
@@ -74,13 +124,13 @@ public class NodoN1 {
                 Socket SocketNodo2;
                 Socket SocketNodo3;
                 Socket SocketNodo4;
-                String[] nodos = {"3.238.217.180", "3.92.8.167", "34.231.229.33", "44.193.39.105","3.232.96.218"};                
+                String[] nodos = {"3.238.217.180", "3.92.8.167", "34.231.229.33", "44.193.39.105", "3.232.96.218"};
                 int puerto = 5000;
 
                 // Socket de los nodos
                 SocketNodoCentral = new Socket(nodos[4], puerto);
-                salidaNodoCentral = new DataOutputStream(SocketNodoCentral.getOutputStream());                
-                
+                salidaNodoCentral = new DataOutputStream(SocketNodoCentral.getOutputStream());
+
 //                SocketNodo2 = new Socket(nodos[1], puerto);
 //                salidaNodo2 = new DataOutputStream(SocketNodo2.getOutputStream());
 //
@@ -89,7 +139,6 @@ public class NodoN1 {
 //
 //                SocketNodo4 = new Socket(nodos[3], puerto);
 //                salidaNodo4 = new DataOutputStream(SocketNodo4.getOutputStream());
-
                 while (true) {
 
                     StringBuilder sb = new StringBuilder(40);
@@ -127,8 +176,8 @@ public class NodoN1 {
                             outNextNode = salidaNodos[index];
 
                             // Envía el ID al siguiente nodo
-                            outNextNode.writeUTF(entrada.readUTF());     
-                            
+                            outNextNode.writeUTF(entrada.readUTF());
+
                             break;
 
                         // Save request desde el nodo central
@@ -140,7 +189,7 @@ public class NodoN1 {
 
                             break;
                     }
-                    
+
                 }
             } catch (IOException ex) {
                 Logger.getLogger(NodoN1.class.getName()).log(Level.SEVERE, null, ex);

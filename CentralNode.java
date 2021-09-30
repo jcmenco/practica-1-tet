@@ -22,186 +22,134 @@ public class CentralNode {
 
     public static void main(String[] args) throws IOException {
 
+        DataInputStream entradaCliente; // Lo que entra al nodo central
+        DataOutputStream salidaCliente; // Lo que se manda al cliente
+        DataInputStream entradaNodo1; // Lo que responde el nodo N1
+        DataOutputStream salidaNodo1; // Lo que se manda al nodo N1
+
         // Puerto del nodo
         ServerSocket SocketNodoCentral;
         int puerto = 5000;
         SocketNodoCentral = new ServerSocket(puerto);
 
-        Thread hilo;
-
-        // Socket para conexiones al cliente o a otros nodos
-        Socket cliente; 
+        // Socket para conexiones con el cliente
+        Socket socketCliente;
 
         while (true) {
+
             System.out.println("Waiting ...");
-            cliente = SocketNodoCentral.accept();
-
-            // Para manejar posibles múltiples conexiones al nodo
-            hilo = new Thread(new handlerClient(cliente));
-            hilo.start();
-        }
-    }
-
-    public static class handlerClient implements Runnable {
-
-        DataInputStream entrada; // Todo lo que entra al nodo se maneja con esta variable
-        DataOutputStream salida; // Lo que se manda al cliente
-
-        DataOutputStream salidaNodo1; // Lo que se manda al nodo N1
-        DataOutputStream salidaNodo2; // Lo que se manda al nodo N2
-        DataOutputStream salidaNodo3; // Lo que se manda al nodo N3
-        DataOutputStream salidaNodo4; // Lo que se manda al nodo N4
-
-        // Socket del cliente
-        Socket socket = null;
-
-        public handlerClient(Socket s) {
-            socket = s;
+            socketCliente = SocketNodoCentral.accept();
 
             try {
-                entrada = new DataInputStream(socket.getInputStream());
-                salida = new DataOutputStream(socket.getOutputStream());
-            } catch (IOException ex) {
-                Logger.getLogger(CentralNode.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
 
-        @Override
-        public void run() {
-            try {
+                entradaCliente = new DataInputStream(socketCliente.getInputStream());
+                salidaCliente = new DataOutputStream(socketCliente.getOutputStream());
+
                 String cadena;
-                String cliente;
+                String cuentaCliente;
                 Random rd = new Random();
 
                 Socket SocketNodo1;
-                Socket SocketNodo2;
-                Socket SocketNodo3;
-                Socket SocketNodo4;
                 String[] nodos = {"3.238.217.180", "3.92.8.167", "34.231.229.33", "44.193.39.105"};
-                int puerto = 5000;
 
-                // Socket de los demás nodos
+                // Socket del nodo central como cliente del nodo N1 (?)
                 SocketNodo1 = new Socket(nodos[0], puerto);
+                entradaNodo1 = new DataInputStream(SocketNodo1.getInputStream());
                 salidaNodo1 = new DataOutputStream(SocketNodo1.getOutputStream());
 
-//                SocketNodo2 = new Socket(nodos[1], puerto);
-//                salidaNodo2 = new DataOutputStream(SocketNodo2.getOutputStream());
-//
-//                SocketNodo3 = new Socket(nodos[2], puerto);
-//                salidaNodo3 = new DataOutputStream(SocketNodo3.getOutputStream());
-//
-//                SocketNodo4 = new Socket(nodos[3], puerto);
-//                salidaNodo4 = new DataOutputStream(SocketNodo4.getOutputStream());
+                StringBuilder sb = new StringBuilder(40);
+                cadena = entradaCliente.readUTF();
+                System.out.println("Mensaje recibido: " + cadena);
+                int cl = cadena.length();
 
-                while (true) {
+                // Objeto de la clase FileMethods
+                FileMethods archivo = new FileMethods();
+                archivo.setFileName("./clientesDB.txt");
 
-                    StringBuilder sb = new StringBuilder(40);
-                    cadena = entrada.readUTF();
-                    System.out.println("Mensaje recibido: " + cadena);
-                    int cl = cadena.length();
+                DataOutputStream outNextNode = salidaNodo1;
 
-                    // Objeto de la clase FileMethods
-                    FileMethods archivo = new FileMethods();
-                    archivo.setFileName("./clientesDB.txt");
+                switch (cl) {
+                    // Save request desde el cliente
+                    case 36:
+                        // Crear identificador de cliente
+                        String cuenta = cadena.substring(0, 11);
+                        int index1 = rd.nextInt(10) + 1;
+                        int index2 = rd.nextInt(10) + 1;
+                        String id = cadena.substring(index1 - 1, index1)
+                                + cadena.substring(index2 - 1, index2);
+                        System.out.println("id " + id);
 
-                    // Array de sockets para calcular el siguiente nodo
-                    //Socket[] socketNodos = {SocketNodo1, SocketNodo2, SocketNodo3, SocketNodo4};
-                    DataOutputStream[] salidaNodos = {salidaNodo1, salidaNodo2, salidaNodo3, salidaNodo4};
+                        // Revisa si ya existe un cliente con ese id
+                        cuentaCliente = archivo.readFile(cuenta, true);
+                        System.out.println("Cliente " + cuentaCliente);
 
-                    // Calcula el siguente nodo para enviarle las partes del mensaje
-                    int index = rd.nextInt(3) + 1;
-                    //Socket nextNode = socketNodos[index];
-                    DataOutputStream outNextNode = salidaNodos[0];
-                    //System.out.println("Siguiente nodo " + nextNode.getInetAddress());
+                        if (cuentaCliente.equals("Not found")) {
+                            System.out.println("ajá y entonce?");
+                            // No existe un cliente con ese id
+                            // Agrega el nuevo cliente
+                            archivo.setMensaje(id + ";" + cuenta);
+                            archivo.writeFile();
+                        }
 
-                    switch (cl) {
-                        // Save request desde el cliente
-                        case 36:
+                        // Divide el mensaje y añade el identificador de 
+                        // cliente y orden
+                        String c1 = id + "1" + cadena.substring(0, 12);
+                        String c2 = id + "2" + cadena.substring(12, 24);
+                        String c3 = id + "3" + cadena.substring(24, 36);
+                        String[] tramas = {c1, c2, c3};
 
-                            // Crear identificador de cliente
-                            String cuenta = cadena.substring(0, 11);
-                            int index1 = rd.nextInt(10) + 1;
-                            int index2 = rd.nextInt(10) + 1;
-                            String id = cadena.substring(index1 - 1, index1)
-                                    + cadena.substring(index2 - 1, index2);
-                            System.out.println("id " + id);
+                        // Envía cada parte del mensaje al siguiente nodo
+                        for (int i = 0; i < 3; i++) {
+                            outNextNode.writeUTF(tramas[i]);
+                        }
 
-                            // Revisa si ya existe un cliente con ese id
-                            cliente = archivo.readFile(cuenta, true);
-                            System.out.println("Cliente " + cliente);
+                        // Responde al cliente                        
+                        String nodoN1SaveResponse = entradaNodo1.readUTF();                        
+                        salidaCliente.writeUTF(nodoN1SaveResponse);
+                        
+                        socketCliente.close();
 
-                            if (cliente.equals("Not found")) {
-                                System.out.println("ajá y entonce?");
-                                // No existe un cliente con ese id
-                                // Agrega el nuevo cliente
-                                archivo.setMensaje(id + ";" + cuenta);
-                                archivo.writeFile();
-                            }
+                        break;
 
-                            // Divide el mensaje y añade el identificador de 
-                            // cliente y orden
-                            String c1 = id + "1" + cadena.substring(0, 12);
-                            String c2 = id + "2" + cadena.substring(12, 24);
-                            String c3 = id + "3" + cadena.substring(24, 36);
-                            String[] tramas = {c1, c2, c3};
+                    // Search request desde el cliente
+                    case 11:
+                        System.out.println("case 11");
 
-                            // Envía cada parte del mensaje al siguiente nodo
-                            for (int i = 0; i < 3; i++) {
-                                outNextNode.writeUTF(tramas[i]);
-                                // Calcula el siguente nodo
-                                index = rd.nextInt(3) + 1;
-                                //nextNode = socketNodos[index];
-                                outNextNode = salidaNodos[0];
-                            }
+                        // Revisa si ya existe la cuenta
+                        cuentaCliente = archivo.readFile(entradaCliente.readUTF(), true);
+                        System.out.println("Cliente/Cuenta " + cuentaCliente);
 
-                            // Responde al cliente
-                            salida.writeUTF("Guardado");
+                        if (cuentaCliente.equals("Not found")) {
+                            System.out.println("ajá y entonce?");
+                            // No existe la cuenta
+                            salidaCliente.writeUTF(cuentaCliente);
+                        }
 
-                            break;
+                        // Sí existe la cuenta -> se obtiene el ID
+                        id = cuentaCliente.substring(0, 2);
 
-                        // Search request desde el cliente
-                        case 11:
-                            System.out.println("case 11");
+                        outNextNode = salidaNodo1;
 
-                            // Revisa si ya existe la cuenta
-                            cliente = archivo.readFile(entrada.readUTF(), true);
-                            System.out.println("Cliente/Cuenta " + cliente);
+                        // Envía el ID al siguiente nodo
+                        outNextNode.writeUTF(id);
 
-                            if (cliente.equals("Not found")) {
-                                System.out.println("ajá y entonce?");
-                                // No existe la cuenta
-                                salida.writeUTF(cliente);
-                            }
+                        break;
 
-                            // Sí existe la cuenta -> se obtiene el ID
-                            id = cliente.substring(0, 2);
+                    // Response from 
+                    case 15:
+                        System.out.println("case 15");
 
-                            // Calcula el siguente nodo
-                            index = rd.nextInt(3) + 1;
-                            //nextNode = socketNodos[index];
-                            outNextNode = salidaNodos[index];
-
-                            // Envía el ID al siguiente nodo
-                            outNextNode.writeUTF(id);
-
-                            break;
-
-                        // Response from 
-                        case 15:
-                            System.out.println("case 15");
-
-                            /////////// Terminar
-                            break;
-                    }
-
-                    // Termina la conexión con el cliente
-                    //socket.close();
-
+                        /////////// Terminar
+                        break;
                 }
+
+                // Termina la conexión con el cliente
+                //socket.close();
             } catch (IOException ex) {
                 Logger.getLogger(CentralNode.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }
-    }
 
+        }
+
+    }
 }
