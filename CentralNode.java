@@ -24,8 +24,8 @@ public class CentralNode {
 
         DataInputStream entradaCliente; // Lo que entra al nodo central
         DataOutputStream salidaCliente; // Lo que se manda al cliente
-        DataInputStream entradaNodo1; // Lo que responde el nodo N1
-        DataOutputStream salidaNodo1; // Lo que se manda al nodo N1
+        DataInputStream entradaNodoVecino = null; // Lo que responde el nodo N1
+        DataOutputStream salidaNodoVecino = null; // Lo que se manda al nodo N1
 
         // Puerto del nodo
         ServerSocket SocketNodoCentral;
@@ -49,15 +49,9 @@ public class CentralNode {
                 String cuentaCliente;
                 Random rd = new Random();
 
-                Socket SocketNodo1;
+                Socket SocketNodoVecino;
                 String[] nodos = {"3.238.217.180", "3.92.8.167", "34.231.229.33", "44.193.39.105"};
 
-                // Socket del nodo central como cliente del nodo N1 (?)
-                SocketNodo1 = new Socket(nodos[0], puerto);
-                entradaNodo1 = new DataInputStream(SocketNodo1.getInputStream());
-                salidaNodo1 = new DataOutputStream(SocketNodo1.getOutputStream());
-
-                StringBuilder sb = new StringBuilder(40);
                 cadena = entradaCliente.readUTF();
                 System.out.println("Mensaje recibido: " + cadena);
                 int cl = cadena.length();
@@ -65,8 +59,6 @@ public class CentralNode {
                 // Objeto de la clase FileMethods
                 FileMethods archivo = new FileMethods();
                 archivo.setFileName("./clientesDB.txt");
-
-                DataOutputStream outNextNode = salidaNodo1;
 
                 switch (cl) {
                     // Save request desde el cliente
@@ -84,13 +76,13 @@ public class CentralNode {
                         System.out.println("Cliente " + cuentaCliente);
 
                         if (cuentaCliente.equals("Not found")) {
-                            System.out.println("ajá y entonce?");
+                            System.out.println("Not found");
                             // No existe un cliente con ese id
                             // Agrega el nuevo cliente
                             archivo.setMensaje(id + ";" + cuenta);
                             archivo.writeFile();
                         } else {
-                            id = cuentaCliente.substring(0,2);
+                            id = cuentaCliente.substring(0, 2);
                         }
 
                         // Divide el mensaje y añade el identificador de 
@@ -99,17 +91,26 @@ public class CentralNode {
                         String c2 = id + "2" + cadena.substring(12, 24);
                         String c3 = id + "3" + cadena.substring(24, 36);
                         String[] tramas = {c1, c2, c3};
-
+                        int index;
+                        
                         // Envía cada parte del mensaje al siguiente nodo
                         for (int i = 0; i < 3; i++) {
-                            System.out.println(tramas[i]+" esto es lo que se supone que manda cada vez");
-                            outNextNode.writeUTF(tramas[i]);
+                            // Calcula el nodo vecino aleatorio
+                            index = rd.nextInt(4);
+                            
+                            // Socket del nodo central como cliente de un nodo vecino aleatorio
+                            SocketNodoVecino = new Socket(nodos[index], puerto);
+                            entradaNodoVecino = new DataInputStream(SocketNodoVecino.getInputStream());
+                            salidaNodoVecino = new DataOutputStream(SocketNodoVecino.getOutputStream());
+
+                            System.out.println(tramas[i] + " esto es lo que se supone que manda cada vez");
+                            salidaNodoVecino.writeUTF(tramas[i]);
                         }
 
                         // Responde al cliente                        
-                        String nodoN1SaveResponse = entradaNodo1.readUTF();                        
+                        String nodoN1SaveResponse = entradaNodoVecino.readUTF();
                         salidaCliente.writeUTF(nodoN1SaveResponse);
-                        
+
                         socketCliente.close();
 
                         break;
@@ -123,7 +124,7 @@ public class CentralNode {
                         System.out.println("Cliente/Cuenta " + cuentaCliente);
 
                         if (cuentaCliente.equals("Not found")) {
-                            System.out.println("ajá y entonce?");
+                            System.out.println("Not found");
                             // No existe la cuenta
                             salidaCliente.writeUTF(cuentaCliente);
                         }
@@ -131,10 +132,8 @@ public class CentralNode {
                         // Sí existe la cuenta -> se obtiene el ID
                         id = cuentaCliente.substring(0, 2);
 
-                        outNextNode = salidaNodo1;
-
                         // Envía el ID al siguiente nodo
-                        outNextNode.writeUTF(id);
+                        salidaNodoVecino.writeUTF(id);
 
                         break;
 
