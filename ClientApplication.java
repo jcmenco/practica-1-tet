@@ -24,7 +24,7 @@ public class ClientApplication {
     public static void main(String[] args) throws IOException {
 
         // Se escoge aleatoriamente un nodo de la red para el request        
-        String host = "localhost";
+        String host = "3.232.96.218";
         int[] nodos = {5000, 5001, 5002, 5003, 5004};
         Random rd = new Random();
         int index = rd.nextInt(4) + 1;
